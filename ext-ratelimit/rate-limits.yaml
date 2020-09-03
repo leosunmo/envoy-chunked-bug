@@ -1,0 +1,8 @@
+---
+domain: httpbin
+descriptors:
+  - key: generic_key
+    value: rateLimitMe
+    rate_limit:
+      requests_per_unit: 1
+      unit: second

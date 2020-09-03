@@ -1,0 +1,79 @@
+version: "3.7"
+services:
+  front-envoy:
+    build:
+      context: front-envoy
+      dockerfile: front-envoy.Dockerfile
+    networks:
+      - envoymesh
+    expose:
+      - "80"
+      - "8001"
+    ports:
+      - "8000:80"
+      - "8001:8001"
+
+  httpbin:
+    image: kennethreitz/httpbin:latest
+    networks:
+      envoymesh:
+        aliases:
+          - httpbin
+    expose:
+      - "80"
+    ports:
+      - "8081:80"
+
+  ext-authz:
+    build:
+      context: ext-authz
+      dockerfile: ext-authz.Dockerfile
+    networks:
+      envoymesh:
+        aliases:
+          - ext-authz
+    expose:
+      - "4000"
+
+  redis:
+    image: redis:alpine
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+    networks:
+      envoymesh:
+        aliases:
+          - redis
+
+  ratelimit:
+    image: envoyproxy/ratelimit:v1.4.0
+    # build:
+    # context: ./ext-ratelimit
+    # dockerfile: Dockerfile-ratelimit
+    command: /bin/ratelimit
+    ports:
+      - 8080:8080
+      - 4001:4001
+      - 6070:6070
+    depends_on:
+      - redis
+    networks:
+      envoymesh:
+        aliases:
+          - rate-limit
+    volumes:
+      - ./ext-ratelimit:/data/ratelimit/config
+    environment:
+      - GRPC_PORT=4001
+      - USE_STATSD=false
+      - LOG_LEVEL=debug
+      - REDIS_SOCKET_TYPE=tcp
+      - REDIS_URL=redis:6379
+      - RUNTIME_ROOT=/data
+      - RUNTIME_SUBDIRECTORY=ratelimit
+    expose:
+      - "4001"
+
+networks:
+  envoymesh: {}
