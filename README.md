@@ -1,4 +1,4 @@
-# Envoy Chuncked Header Bug
+# Envoy Chunked Header Bug
 
 For https://github.com/envoyproxy/envoy/issues/7753
 
